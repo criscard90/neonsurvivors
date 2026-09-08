@@ -38,7 +38,23 @@ const shuffle = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = 
 const chr = String.fromCharCode;
 function isComboFull(g) { return g.w.laser >= 5 && g.w.gluon >= 5 && g.w.higgs >= 5; }
 function stClear(g) {
-  if (g._popupPanel) { try { g._popupPanel.destroy(); } catch (e) { } g._popupPanel = null; }
+  if (g._popupPanel) { uiWipe(g._popupPanel); g._popupPanel = null; }
+}
+/* UI: registra un oggetto su un pannello — fisso sullo schermo e distrutto insieme al pannello */
+function uiReg(g, o) {
+  if (g && o) {
+    (g._ui || (g._ui = [])).push(o);
+    if (o.setScrollFactor) { try { o.setScrollFactor(0); } catch (e) { } }
+  }
+  return o;
+}
+/* UI: distrugge tutti gli oggetti tracciati del pannello, poi il pannello stesso */
+function uiWipe(g) {
+  if (g && g._ui) {
+    g._ui.forEach(o => { try { if (o && o.destroy) o.destroy(); } catch (e) { } });
+    g._ui = [];
+  }
+  if (g) { try { g.destroy(); } catch (e) { } }
 }
 
 /* shape factory sicura: primitive Geom di Phaser con fallback */
@@ -474,18 +490,18 @@ class Game extends Phaser.Scene {
     const mid = { ...TXT, fontSize: 24, color: '#cfeaff', stroke: '#0a1a2a', strokeThickness: 4 };
     const sml = { ...TXT, fontSize: 17, color: '#9be8ff', stroke: '#0a1a2a', strokeThickness: 3 };
     this.overlay = this.add.container(0, 0);
-    const dim = mkr(this.overlay, 0, 0, W, H, 0x071426);
-    dim.setDepth(110);
-    const t1 = this.add.text(W / 2, H * 0.30, 'QUARK', big); t1.setOrigin(0.5, 0.5); t1.setScrollFactor(0);
-    const t2 = this.add.text(W / 2, H * 0.44, 'FUGA DAL REGNO MICROSCOPICO', mid); t2.setOrigin(0.5, 0.5); t2.setScrollFactor(0);
-    const t3 = this.add.text(W / 2, H * 0.56,
+    const dim = uiReg(this.overlay, mkr(this.overlay, 0, 0, W, H, 0x071426));
+    if (dim) dim.setDepth(110);
+    const t1 = uiReg(this.overlay, this.add.text(W / 2, H * 0.30, 'QUARK', big)); t1.setOrigin(0.5, 0.5);
+    const t2 = uiReg(this.overlay, this.add.text(W / 2, H * 0.44, 'FUGA DAL REGNO MICROSCOPICO', mid)); t2.setOrigin(0.5, 0.5);
+    const t3 = uiReg(this.overlay, this.add.text(W / 2, H * 0.56,
       'Sei un quark intrappolato in un' + chr(39) + 'universo di molecole maligne.\n' +
       'Sopravvivi alle ondate, sconfiggi i 10 Boss Molecolari e scappa!\n\n' +
       'FRECCE / WASD · SPACE per il DASH · TOCCA lo schermo e trascina per muoverti\n' +
       'Raccogli i cristalli XP, sali di livello e potenzia le tue armi quantistiche.',
-      { ...sml, align: 'center' }); t3.setOrigin(0.5, 0.5); t3.setScrollFactor(0);
-    const t4 = this.add.text(W / 2, H * 0.82, 'TOCCA o premi FRECCE per iniziare la fuga', mid);
-    t4.setOrigin(0.5, 0.5); t4.setScrollFactor(0);
+      { ...sml, align: 'center' })); t3.setOrigin(0.5, 0.5);
+    const t4 = uiReg(this.overlay, this.add.text(W / 2, H * 0.82, 'TOCCA o premi FRECCE per iniziare la fuga', mid));
+    t4.setOrigin(0.5, 0.5);
     this.intro = { t: 0, combo: false };
   }
 
@@ -506,6 +522,8 @@ class Game extends Phaser.Scene {
     this.pickups = []; this.boss = null; this.bossBullets = []; this.orbits = [];
     this.parts = []; this.texts = [];
     this.auraShp = null; this.flashShp = null; this.bShpByKind = {};
+    /* pulisci titolo/intro precedenti: niente scritte sovrapposte */
+    this.clearLevelPanel();
 
     const cx = AREA.W / 2, cy = AREA.H / 2;
     this.pl.x = cx; this.pl.y = cy;
@@ -518,14 +536,15 @@ class Game extends Phaser.Scene {
     const mid = { ...TXT, fontSize: 30, color: '#9be8ff', stroke: '#0a1a2a', strokeThickness: 4 };
     const sml = { ...TXT, fontSize: 18, color: '#cfeaff', stroke: '#0a1a2a', strokeThickness: 3 };
     const panel = this.add.container(0, 0);
-    const dim = mkr(panel, 0, 0, W, H, 0x0a1230); dim.setDepth(111);
-    const wt = this.add.text(W / 2, H * 0.30, 'LIVELLO ' + (i + 1), big); wt.setOrigin(0.5, 0.5); wt.setScrollFactor(0);
-    const nm = this.add.text(W / 2, H * 0.43, 'BOSS: ' + L.name, { ...mid, color: '#ffdd66' });
-    nm.setOrigin(0.5, 0.5); nm.setScrollFactor(0);
-    const tg = this.add.text(W / 2, H * 0.52, L.tagline, sml); tg.setOrigin(0.5, 0.5); tg.setScrollFactor(0);
-    const info = this.add.text(W / 2, H * 0.62,
+    const dim = uiReg(panel, mkr(panel, 0, 0, W, H, 0x0a1230)); if (dim) dim.setDepth(111);
+    const wt = uiReg(panel, this.add.text(W / 2, H * 0.30, 'LIVELLO ' + (i + 1), big)); wt.setOrigin(0.5, 0.5);
+    const nm = uiReg(panel, this.add.text(W / 2, H * 0.43, 'Resisti fino alle 02:00', { ...mid, color: '#ffdd66' }));
+    nm.setOrigin(0.5, 0.5);
+    const tg = uiReg(panel, this.add.text(W / 2, H * 0.52, 'Le molecole maligne si stanno radunando…', sml));
+    tg.setOrigin(0.5, 0.5);
+    const info = uiReg(panel, this.add.text(W / 2, H * 0.62,
       'Ondate per 2 minuti... poi al 02:00 il boss!\nSopravvivere e non farsi dissolvere.',
-      { ...sml, align: 'center' }); info.setOrigin(0.5, 0.5); info.setScrollFactor(0);
+      { ...sml, align: 'center' })); info.setOrigin(0.5, 0.5);
     /* barra boss visibile in confidenza col nome */
     this.hud.bossFill.setAlpha(0); this.hud.bossBar.setAlpha(0);
     this.hud.bossName.setAlpha(0); this.hud.bossPct.setAlpha(0);
@@ -535,8 +554,8 @@ class Game extends Phaser.Scene {
   }
 
   clearLevelPanel() {
-    if (this._lvlPanel) { try { this._lvlPanel.destroy(); } catch (e) { } this._lvlPanel = null; }
-    if (this.overlay) { try { this.overlay.destroy(); } catch (e) { } this.overlay = null; }
+    if (this._lvlPanel) { uiWipe(this._lvlPanel); this._lvlPanel = null; }
+    if (this.overlay) { uiWipe(this.overlay); this.overlay = null; }
   }
 
   /* ---------- ondate: tipi e intensità crescono col tempo e col livello ---------- */
@@ -1047,12 +1066,12 @@ class Game extends Phaser.Scene {
 
   buildUpgradeOptions() {
     const W = this.res.W, H = this.res.H;
-    if (this.panel) { this.panel.destroy(); this.panel = null; stClear(this); }
+    if (this.panel) { uiWipe(this.panel); this.panel = null; stClear(this); }
     const panel = this.add.container(0, 0);
     this.panel = panel;
-    const dim = mkr(panel, 0, 0, W, H, 0x080d1c); dim.setDepth(112);
-    const title = this.add.text(W / 2, H * 0.16, 'SALI DI LIVELLO!', { ...TXT, fontSize: 40, color: '#9be8ff', stroke: '#0a1a2a', strokeThickness: 5 });
-    title.setOrigin(0.5, 0.5); title.setScrollFactor(0);
+    const dim = uiReg(panel, mkr(panel, 0, 0, W, H, 0x080d1c)); if (dim) dim.setDepth(112);
+    const title = uiReg(panel, this.add.text(W / 2, H * 0.16, 'SALI DI LIVELLO!', { ...TXT, fontSize: 40, color: '#9be8ff', stroke: '#0a1a2a', strokeThickness: 5 }));
+    title.setOrigin(0.5, 0.5);
 
     const opts = [];
     /* armi non maxate + passivi non maxati */
@@ -1074,17 +1093,17 @@ class Game extends Phaser.Scene {
       const col = isCombo ? 0xdd77ff : def.col ? def.col : def.ico;
       const px = cx + (i - (chosen.length - 1) / 2) * 340;
       opts.push({ key, def, lvl, isPass, isCombo, px, y: H * 0.5, w: 300, h: 200 });
-      const card = mkr(panel, px - 150, H * 0.52 - 100, 300, 200, 0x132a4a);
+      const card = uiReg(panel, mkr(panel, px - 150, H * 0.52 - 100, 300, 200, 0x132a4a));
       if (card) { card.setDepth(113); }
       strokeOn(card, col, 3);
-      const ic = mkc(panel, px - 150, H * 0.52 - 40, 30, col);
-      const nmTxt = this.add.text(px, H * 0.52 - 8, def.nm, { ...TXT, fontSize: 22, color: isCombo ? '#ff88ff' : '#dff6ff', stroke: '#0a1a2a', strokeThickness: 3 });
-      nmTxt.setOrigin(0.5, 0.5); nmTxt.setScrollFactor(0);
-      const img2 = this.add.text(px, H * 0.52 + 44, def.img + (isCombo ? '' : (lvl === 0 ? ' — NUOVO!' : ' — Lv ' + lvl + ' → ' + (lvl + 1))), { ...TXT, fontSize: 15, color: '#9be8ff', stroke: '#0a1a2a', strokeThickness: 2 });
-      img2.setOrigin(0.5, 0.5); img2.setScrollFactor(0);
+      const ic = uiReg(panel, mkc(panel, px - 150, H * 0.52 - 40, 30, col));
+      const nmTxt = uiReg(panel, this.add.text(px, H * 0.52 - 8, def.nm, { ...TXT, fontSize: 22, color: isCombo ? '#ff88ff' : '#dff6ff', stroke: '#0a1a2a', strokeThickness: 3 }));
+      nmTxt.setOrigin(0.5, 0.5);
+      const img2 = uiReg(panel, this.add.text(px, H * 0.52 + 44, def.img + (isCombo ? '' : (lvl === 0 ? ' — NUOVO!' : ' — Lv ' + lvl + ' → ' + (lvl + 1))), { ...TXT, fontSize: 15, color: '#9be8ff', stroke: '#0a1a2a', strokeThickness: 2 }));
+      img2.setOrigin(0.5, 0.5);
     }
-    const hint = this.add.text(W / 2, H * 0.78, 'TOCCA una carta per scegliere', { ...TXT, fontSize: 18, color: '#cfeaff', stroke: '#0a1a2a', strokeThickness: 3 });
-    hint.setOrigin(0.5, 0.5); hint.setScrollFactor(0);
+    const hint = uiReg(panel, this.add.text(W / 2, H * 0.78, 'TOCCA una carta per scegliere', { ...TXT, fontSize: 18, color: '#cfeaff', stroke: '#0a1a2a', strokeThickness: 3 }));
+    hint.setOrigin(0.5, 0.5);
     this._opts = opts;
     return opts;
   }
@@ -1116,7 +1135,7 @@ class Game extends Phaser.Scene {
       this.popup('SINGOLARITÀ QUANTISTICA\nLe tre forze unite!');
     }
 
-    if (this.panel) { this.panel.destroy(); this.panel = null; stClear(this); }
+    if (this.panel) { uiWipe(this.panel); this.panel = null; stClear(this); }
     this._opts = null;
     if (this.pend && this.pend > 0) {
       this.pend--;
@@ -1130,16 +1149,16 @@ class Game extends Phaser.Scene {
   /* ---------- utilità pannelli ---------- */
   popup(msg) {
     const W = this.res.W, H = this.res.H;
-    if (this._popupPanel) this._popupPanel.destroy();
+    if (this._popupPanel) uiWipe(this._popupPanel);
     const p = this.add.container(0, 0);
     this._popupPanel = p;
-    const dim = mkr(p, 0, 0, W, H, 0x05080f); dim.setDepth(114);
-    const t = this.add.text(W / 2, H * 0.36, msg, { ...TXT, fontSize: 32, color: '#ff88ff', stroke: '#0a1a2a', strokeThickness: 5, align: 'center' });
-    t.setOrigin(0.5, 0.5); t.setScrollFactor(0);
-    const t2 = this.add.text(W / 2, H * 0.5, 'TOCCA per continuare', { ...TXT, fontSize: 20, color: '#cfeaff', stroke: '#0a1a2a', strokeThickness: 3 });
-    t2.setOrigin(0.5, 0.5); t2.setScrollFactor(0);
+    const dim = uiReg(p, mkr(p, 0, 0, W, H, 0x05080f)); if (dim) dim.setDepth(114);
+    const t = uiReg(p, this.add.text(W / 2, H * 0.36, msg, { ...TXT, fontSize: 32, color: '#ff88ff', stroke: '#0a1a2a', strokeThickness: 5, align: 'center' }));
+    t.setOrigin(0.5, 0.5);
+    const t2 = uiReg(p, this.add.text(W / 2, H * 0.5, 'TOCCA per continuare', { ...TXT, fontSize: 20, color: '#cfeaff', stroke: '#0a1a2a', strokeThickness: 3 }));
+    t2.setOrigin(0.5, 0.5);
     this.input.once('pointerdown', () => {
-      if (this._popupPanel) { this._popupPanel.destroy(); this._popupPanel = null; }
+      if (this._popupPanel) { uiWipe(this._popupPanel); this._popupPanel = null; }
     });
   }
 /* ---------- helpers di stato ---------- */
@@ -1184,13 +1203,13 @@ class Game extends Phaser.Scene {
 
   bubble(msg) {
     const W = this.res.W, H = this.res.H;
-    if (this._bubblePanel) this._bubblePanel.destroy();
+    if (this._bubblePanel) uiWipe(this._bubblePanel);
     const p = this.add.container(0, 0);
     this._bubblePanel = p;
-    const box = mkr(p, W / 2 - 250, H * 0.12 - 40, 500, 80, 0x0a1030);
+    const box = uiReg(p, mkr(p, W / 2 - 250, H * 0.12 - 40, 500, 80, 0x0a1030));
     if (box) box.setDepth(109);
-    const t = this.add.text(W / 2, H * 0.12, msg, { ...TXT, fontSize: 20, color: '#ffdd66', stroke: '#0a0a0a', strokeThickness: 3, align: 'center' });
-    t.setOrigin(0.5, 0.5); t.setScrollFactor(0);
+    const t = uiReg(p, this.add.text(W / 2, H * 0.12, msg, { ...TXT, fontSize: 20, color: '#ffdd66', stroke: '#0a0a0a', strokeThickness: 3, align: 'center' }));
+    t.setOrigin(0.5, 0.5);
     this._bubbleT = 3.5;
   }
 
@@ -1445,7 +1464,7 @@ bossAttack(b, atk) {
       this.st = 'clear';
       this.clearT = 2.2;
       this.floating(b.x, b.y - 40, 'BOSS SCONFITTO!', b.L.col2);
-      if (this._bubblePanel) { this._bubblePanel.destroy(); this._bubblePanel = null; }
+      if (this._bubblePanel) { uiWipe(this._bubblePanel); this._bubblePanel = null; }
     }
   }
 /* ---------- effetti: particelle, flash, shake ---------- */
@@ -1500,7 +1519,7 @@ bossAttack(b, atk) {
     /* bolla di dialogo boss */
     if (this._bubbleT !== undefined) {
       this._bubbleT = (this._bubbleT || 0) - dt;
-      if (this._bubbleT <= 0 && this._bubblePanel) { this._bubblePanel.destroy(); this._bubblePanel = null; }
+      if (this._bubbleT <= 0 && this._bubblePanel) { uiWipe(this._bubblePanel); this._bubblePanel = null; }
     }
   }
 /* ---------- ciclo principale ---------- */
@@ -1618,6 +1637,12 @@ bossAttack(b, atk) {
     wipe(this.bossSpawns, s => { if (s.shp) this.destroyShapes([s.shp]); });
     wipe(this.texts, t => { if (t && t.shp) this.destroyShapes([t.shp]); else if (t && t.txt && t.txt.destroy) { try { t.txt.destroy(); } catch (e) { } } });
     if (this.boss && this.boss.shp) this.destroyShapes(this.boss.shp);
+    /* pulisci anche i pannelli UI residui (game over, upgrade, popup, bolla) */
+    if (this._overPanel) { uiWipe(this._overPanel); this._overPanel = null; }
+    if (this.panel) { uiWipe(this.panel); this.panel = null; }
+    if (this._popupPanel) { uiWipe(this._popupPanel); this._popupPanel = null; }
+    if (this._bubblePanel) { uiWipe(this._bubblePanel); this._bubblePanel = null; }
+    this._opts = null;
     this.clearLevelPanel();
     this.resetShapes();
     this.createPlayer();
@@ -1641,26 +1666,26 @@ bossAttack(b, atk) {
 
   showOver(dead) {
     const W = this.res.W, H = this.res.H;
-    if (this._overPanel) { this._overPanel.destroy(); }
+    if (this._overPanel) { uiWipe(this._overPanel); }
     const p = this.add.container(0, 0);
     this._overPanel = p;
-    const dim = mkr(p, 0, 0, W, H, dead ? 0x1a0a2a : 0x0b1a33);
+    const dim = uiReg(p, mkr(p, 0, 0, W, H, dead ? 0x1a0a2a : 0x0b1a33));
     if (dim) dim.setDepth(116);
     const title = dead ? 'GAME OVER' : 'VITTORIA!';
     const col = dead ? '#ff5566' : '#ffdd88';
-    const t = this.add.text(W / 2, H * 0.32, title, { ...TXT, fontSize: 74, color: col, stroke: '#0a1a2a', strokeThickness: 6, align: 'center' });
-    t.setOrigin(0.5, 0.5); t.setScrollFactor(0);
+    const t = uiReg(p, this.add.text(W / 2, H * 0.32, title, { ...TXT, fontSize: 74, color: col, stroke: '#0a1a2a', strokeThickness: 6, align: 'center' }));
+    t.setOrigin(0.5, 0.5);
     const msg = dead ? ('Quark è stato dissolto nel regno microscopico.\nIl livello raggiunto: ' + (this.lv + 1) + ' di 10.')
       : ('Hai liberato tutti i 10 boss e Quark è fuggito!\n' + pick(FLAVOR_SOLE) + ' ti attende.');
-    const m = this.add.text(W / 2, H * 0.5, msg, { ...TXT, fontSize: 24, stroke: '#0a1a2a', strokeThickness: 4, align: 'center' });
-    m.setOrigin(0.5, 0.5); m.setScrollFactor(0);
-    const st = this.add.text(W / 2, H * 0.65,
+    const m = uiReg(p, this.add.text(W / 2, H * 0.5, msg, { ...TXT, fontSize: 24, stroke: '#0a1a2a', strokeThickness: 4, align: 'center' }));
+    m.setOrigin(0.5, 0.5);
+    const st = uiReg(p, this.add.text(W / 2, H * 0.65,
       'Punteggio: ' + Math.floor(this.score) + ' · Nemici sconfitti: ' + this.kills + ' · Armi: ' +
       Object.values(this.w).reduce((a, b) => a + b, 0),
-      { ...TXT, fontSize: 20, color: '#9be8ff', stroke: '#0a1a2a', strokeThickness: 3, align: 'center' });
-    st.setOrigin(0.5, 0.5); st.setScrollFactor(0);
-    const r = this.add.text(W / 2, H * 0.78, 'TOCCA o premi INVIO per rigiocare', { ...TXT, fontSize: 26, color: '#cfeaff', stroke: '#0a1a2a', strokeThickness: 4, align: 'center' });
-    r.setOrigin(0.5, 0.5); r.setScrollFactor(0);
+      { ...TXT, fontSize: 20, color: '#9be8ff', stroke: '#0a1a2a', strokeThickness: 3, align: 'center' }));
+    st.setOrigin(0.5, 0.5);
+    const r = uiReg(p, this.add.text(W / 2, H * 0.78, 'TOCCA o premi INVIO per rigiocare', { ...TXT, fontSize: 26, color: '#cfeaff', stroke: '#0a1a2a', strokeThickness: 4, align: 'center' }));
+    r.setOrigin(0.5, 0.5);
   }
 
   // compatibilità Phaser <3.60: scene possono avere questo metodo
