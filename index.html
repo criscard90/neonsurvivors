@@ -18,10 +18,28 @@
 		canvas { display:block; box-shadow:0 0 70px rgba(0,214,255,.13); }
 		#loading { position:fixed; inset:0; display:grid; place-items:center; background:#02070e; letter-spacing:.12em; font-family:'Space Mono',monospace; font-size:12px; color:var(--cyan); }
 		.hidden { display:none !important; }
+		#shareButton { position:fixed; right:14px; bottom:14px; z-index:40; border:1px solid var(--cyan); background:#07131e; color:var(--cyan); padding:7px 10px; font:700 9px 'Space Mono',monospace; letter-spacing:.06em; cursor:pointer; }
+		#shareButton:hover { background:#0b202b; }
+		.shareIcon { position:relative; display:block; width:16px; height:16px; }
+		.shareIcon:before, .shareIcon:after { content:""; position:absolute; left:4px; width:9px; height:1px; background:currentColor; transform-origin:left center; }
+		.shareIcon:before { top:6px; transform:rotate(-29deg); }
+		.shareIcon:after { top:10px; transform:rotate(29deg); }
+		.shareIcon i { position:absolute; width:5px; height:5px; border:1px solid currentColor; border-radius:50%; background:#07131e; }
+		.shareIcon i:nth-child(1) { top:5px; left:0; }
+		.shareIcon i:nth-child(2) { top:0; right:0; }
+		.shareIcon i:nth-child(3) { bottom:0; right:0; }
+		#shareOverlay { position:fixed; inset:0; z-index:60; display:grid; place-items:center; background:rgba(2,7,14,.97); cursor:pointer; }
+		#shareOverlay img { width:min(72vw, 420px); height:min(72vw, 420px); image-rendering:auto; background:#fff; padding:18px; }
+		#closeShare { position:absolute; top:20px; right:20px; border:1px solid var(--pink); background:#07131e; color:var(--pink); padding:10px 14px; font:700 11px 'Space Mono',monospace; cursor:pointer; }
 	</style>
 </head>
 <body>
 	<div id="game"></div><div id="loading">INITIALIZING QUANTUM FIELD...</div>
+	<button id="shareButton" type="button" aria-label="Condividi gioco" title="Condividi gioco"><span class="shareIcon" aria-hidden="true"><i></i><i></i><i></i></span></button>
+	<div id="shareOverlay" class="hidden" role="dialog" aria-label="QR code per condividere il gioco">
+		<img src="qrcode.png" alt="QR code per condividere il gioco">
+		<button id="closeShare" type="button">CLOSE</button>
+	</div>
 	<script>
 	(() => {
 		const W = 1100, H = 700, GAME_SECONDS = 120;
@@ -49,6 +67,13 @@
 			laser(){this.tone(760,.07,'sawtooth',.025);}, orb(){this.tone(440,.08,'sine',.03);this.tone(660,.12,'sine',.018,.05);}, upgrade(){[392,523.25,783.99].forEach((f,i)=>this.tone(f,.18,'triangle',.035,i*.09));}, boss(){[110,146.83,103.83].forEach((f,i)=>this.tone(f,.3,'sawtooth',.035,i*.12));}, hit(){this.noise(.1,.035);this.tone(90,.12,'square',.018);}, death(){[220,164.81,110].forEach((f,i)=>this.tone(f,.28,'sawtooth',.04,i*.13));}
 		};
 		const boot = () => { document.getElementById('loading').classList.add('hidden'); };
+		const shareButton = document.getElementById('shareButton');
+		const shareOverlay = document.getElementById('shareOverlay');
+		const closeShare = document.getElementById('closeShare');
+		const closeShareOverlay = () => shareOverlay.classList.add('hidden');
+		shareButton.addEventListener('click', event => { event.stopPropagation(); shareOverlay.classList.remove('hidden'); });
+		closeShare.addEventListener('click', event => { event.stopPropagation(); closeShareOverlay(); });
+		shareOverlay.addEventListener('click', event => { if(event.target === shareOverlay) closeShareOverlay(); });
 		class Main extends Phaser.Scene {
 			constructor(){ super('main'); }
 			create(){
