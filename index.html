@@ -12,9 +12,9 @@
 		@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
 		:root { --ink:#dffaff; --cyan:#39f6ff; --pink:#ff4d9d; --lime:#c7ff52; --panel:#07131e; }
 		* { box-sizing:border-box; }
-		html,body { margin:0; min-height:100%; background:#02070e; color:var(--ink); font-family:'Barlow Condensed',sans-serif; overflow:hidden; }
+		html,body { margin:0; width:100%; height:100%; min-height:100%; background:#02070e; color:var(--ink); font-family:'Barlow Condensed',sans-serif; overflow:hidden; }
 		body:before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.25; background:linear-gradient(rgba(57,246,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(57,246,255,.035) 1px,transparent 1px); background-size:34px 34px; }
-		#game { width:100vw; height:100vh; display:grid; place-items:center; }
+		#game { width:100vw; width:100dvw; height:100vh; height:100dvh; display:grid; place-items:center; overflow:hidden; }
 		canvas { display:block; box-shadow:0 0 70px rgba(0,214,255,.13); }
 		#loading { position:fixed; inset:0; display:grid; place-items:center; background:#02070e; letter-spacing:.12em; font-family:'Space Mono',monospace; font-size:12px; color:var(--cyan); }
 		.hidden { display:none !important; }
@@ -140,7 +140,7 @@
 			win(){this.isGameOver=true;this.physics.pause();this.overlay('SINGOLARITA RAGGIUNTA','Il regno microscopico non può più trattenerti.','NUOVA CORSA');}
 			overlay(head,copy,button){let p=this.add.graphics().setDepth(50);p.fillStyle(0x02070e,.95).fillRect(250,210,600,260).lineStyle(2,0xff4d9d,1).strokeRect(250,210,600,260);this.add.text(W/2,270,head,{fontFamily:'Space Mono',fontSize:25,color:'#ff4d9d'}).setOrigin(.5).setDepth(51);this.add.text(W/2,320,copy,{fontFamily:'Barlow Condensed',fontSize:19,color:'#dffaff'}).setOrigin(.5).setDepth(51);let b=this.add.text(W/2,400,'[ '+button+' ]',{fontFamily:'Space Mono',fontSize:13,color:'#c7ff52',backgroundColor:'#0b202b',padding:{left:20,right:20,top:12,bottom:12}}).setOrigin(.5).setDepth(51).setInteractive();b.on('pointerdown',()=>this.scene.restart());}
 		}
-		new Phaser.Game({type:Phaser.AUTO,parent:'game',width:W,height:H,backgroundColor:'#030c16',physics:{default:'arcade',arcade:{debug:false}},scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[Main]});
+		new Phaser.Game({type:Phaser.AUTO,parent:'game',width:W,height:H,backgroundColor:'#030c16',physics:{default:'arcade',arcade:{debug:false}},scale:{mode:Phaser.Scale.ENVELOP,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[Main]});
 		if('serviceWorker' in navigator && location.protocol!=='file:') window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}));
 	})();
 	</script>
