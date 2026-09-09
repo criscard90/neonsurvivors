@@ -1,0 +1,13 @@
+{
+  "name": "QUARK // Escape from the Microworld",
+  "short_name": "Quark",
+  "description": "Sopravvivi alle ondate molecolari e fuggi dal regno microscopico.",
+  "lang": "it",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#02070e",
+  "theme_color": "#02070e",
+  "categories": ["games", "entertainment"]
+}

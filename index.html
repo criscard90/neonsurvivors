@@ -3,6 +3,9 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<meta name="theme-color" content="#02070e">
+	<meta name="description" content="Quark: sopravvivi alle ondate molecolari e fuggi dal regno microscopico.">
+	<link rel="manifest" href="manifest.json">
 	<title>QUARK // Escape from the Microworld</title>
 	<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 	<style>
@@ -109,6 +112,7 @@
 			overlay(head,copy,button){let p=this.add.graphics().setDepth(50);p.fillStyle(0x02070e,.95).fillRect(250,210,600,260).lineStyle(2,0xff4d9d,1).strokeRect(250,210,600,260);this.add.text(W/2,270,head,{fontFamily:'Space Mono',fontSize:25,color:'#ff4d9d'}).setOrigin(.5).setDepth(51);this.add.text(W/2,320,copy,{fontFamily:'Barlow Condensed',fontSize:19,color:'#dffaff'}).setOrigin(.5).setDepth(51);let b=this.add.text(W/2,400,'[ '+button+' ]',{fontFamily:'Space Mono',fontSize:13,color:'#c7ff52',backgroundColor:'#0b202b',padding:{left:20,right:20,top:12,bottom:12}}).setOrigin(.5).setDepth(51).setInteractive();b.on('pointerdown',()=>this.scene.restart());}
 		}
 		new Phaser.Game({type:Phaser.AUTO,parent:'game',width:W,height:H,backgroundColor:'#030c16',physics:{default:'arcade',arcade:{debug:false}},scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[Main]});
+		if('serviceWorker' in navigator && location.protocol!=='file:') window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}));
 	})();
 	</script>
 </body>
